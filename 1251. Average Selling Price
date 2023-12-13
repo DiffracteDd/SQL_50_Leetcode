@@ -1,0 +1,36 @@
+Query:-
+SELECT
+  p.product_id,
+  IFNULL(ROUND(SUM(p.price * IFNULL(u.units, 0)) / NULLIF(SUM(IFNULL(u.units, 0)), 0), 2), 0) AS average_price
+FROM
+  Prices p
+LEFT JOIN
+  UnitsSold u ON p.product_id = u.product_id
+    AND u.purchase_date BETWEEN p.start_date AND p.end_date
+GROUP BY
+  p.product_id;
+
+
+Explaination of some functions:-
+
+#IFNULL function:
+
+Syntax: IFNULL(expr1, expr2)
+The IFNULL function returns expr1 if it is not NULL; otherwise, it returns expr2.
+In the context of the query, it's often used to provide a default value when a column might be NULL. For example, in the query:
+IFNULL(u.units, 0)
+If u.units is NULL, it will be replaced with 0.
+
+#NULLIF function:
+
+Syntax: NULLIF(expr1, expr2)
+The NULLIF function returns NULL if expr1 equals expr2; otherwise, it returns expr1.
+In the context of the query, it's commonly used to avoid division by zero errors. For example, in the query:
+NULLIF(SUM(IFNULL(u.units, 0)), 0)
+This ensures that if the denominator (the sum of units) is 0, the result is NULL, preventing a division by zero error in the subsequent division operation.
+
+#Putting it all together in the context of your query:
+
+IFNULL(ROUND(SUM(p.price * IFNULL(u.units, 0)) / NULLIF(SUM(IFNULL(u.units, 0)), 0), 2), 0) AS average_price
+This handles scenarios where units might be NULL in the UnitsSold table (using IFNULL(u.units, 0)) and avoids division by zero errors
+(using NULLIF for the denominator). The result is the calculated average price, and if the result is NULL (due to division by zero or other reasons), it is replaced with 0 using IFNULL.
